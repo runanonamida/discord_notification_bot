@@ -130,6 +130,19 @@ class NotificationBot:
             self.sent_notifications.add(key)
         
         return True
+    
+    def remove_one_time_notification(self, channel_id: int, notification_id: str) -> bool:
+        """一回限り通知を送信後に自動削除"""
+        channel_key = str(channel_id)
+        if channel_key not in self.notifications:
+            return False
+        
+        for i, notif in enumerate(self.notifications[channel_key]):
+            if notif['id'] == notification_id and not notif['repeat']:
+                self.notifications[channel_key].pop(i)
+                self.save_notifications()
+                return True
+        return False
 
 # NotificationBotインスタンスを作成
 notification_bot = NotificationBot()
@@ -362,6 +375,11 @@ async def check_notifications():
                     embed.set_footer(text=f"ID: {notification['id']}")
                     
                     await channel.send(embed=embed)
+                    
+                    # 一回限り通知の場合、送信後に自動削除
+                    if not notification['repeat']:
+                        notification_bot.remove_one_time_notification(int(channel_id), notification['id'])
+                        print(f"一回限り通知 {notification['id']} を自動削除しました")
                     
         except Exception as e:
             print(f"通知送信エラー: {e}")
