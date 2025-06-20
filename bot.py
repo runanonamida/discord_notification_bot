@@ -6,6 +6,10 @@ from datetime import datetime, time
 import os
 import uuid
 from typing import Optional, List
+import pytz
+
+# 日本時間の設定
+JST = pytz.timezone('Asia/Tokyo')
 
 # Botの設定
 intents = discord.Intents.default()
@@ -63,7 +67,7 @@ class NotificationBot:
             'weekdays': weekdays,
             'repeat': repeat,
             'enabled': True,
-            'created_at': datetime.now().isoformat()
+            'created_at': datetime.now(JST).isoformat()
         }
         
         self.notifications[channel_key].append(notification)
@@ -106,7 +110,7 @@ class NotificationBot:
         if not notification['enabled']:
             return False
         
-        now = datetime.now()
+        now = datetime.now(JST)  # 日本時間を使用
         current_weekday = now.weekday()
         current_time = now.strftime('%H:%M')
         
@@ -333,14 +337,14 @@ async def check_notifications():
                 if notification_bot.should_send_notification(notification):
                     
                     # 曜日表示
-                    now = datetime.now()
+                    now = datetime.now(JST)  # 日本時間を使用
                     weekday_name = WEEKDAY_NAMES[now.weekday()]
                     
                     embed = discord.Embed(
                         title="🔔 通知時間です！",
                         description=notification['message'],
                         color=discord.Color.gold(),
-                        timestamp=datetime.now()
+                        timestamp=datetime.now(JST)
                     )
                     
                     embed.add_field(
